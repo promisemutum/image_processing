@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+
+# Data
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+models/*
+!models/.gitkeep
+
+# Project specific
+comparison.jpg
+*.onnx
