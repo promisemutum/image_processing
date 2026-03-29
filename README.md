@@ -1,19 +1,24 @@
-# IMG_PROJECT - AI Image Upscaling Toolkit
+# IMG_PROJECT - AI Image Upscaling Evaluation Toolkit
 
-A high-performance toolkit for upscaling low-resolution images by 4x using specialized **Swift Parameter-free Attention Network (SPAN)** architectures and other state-of-the-art ONNX models. 
-
-This project facilitates high-quality photo and texture reconstruction using GPU-accelerated inference via ONNX Runtime.
+A high-performance toolkit for upscaling low-resolution images by 4x and evaluating state-of-the-art Super-Resolution architectures. This project facilitates high-quality reconstruction using GPU-accelerated inference via ONNX Runtime and provides tools to quantitatively and qualitatively compare different AI models.
 
 ---
 
 ## 🌟 Key Features
 
-- **Multi-Model Support**: Automatically discovers all `.onnx` models in the `models/` directory.
+- **Multi-Model Support & Evaluation**: Compare different upscale technologies instantly.
 - **Dynamic Selection**: Run the script to choose between available upscaling specializations.
 - **GPU-Accelerated**: Prioritizes NVIDIA GPUs via `CUDAExecutionProvider` for high-speed processing.
 - **Tiled Processing**: Uses smart memory management (tiling) to process large images without crashing on limited VRAM.
 - **Batch Processing**: Automatically processes all images in the `input/` folder and saves them with model-specific prefixes.
 - **Side-by-Side Comparison**: Built-in tool to generate panoramic comparisons featuring the Original image and all upscaled versions.
+
+---
+
+## 🧪 Available Models
+- **4x-ESRGAN**: (Enhanced Super-Resolution Generative Adversarial Network) Best for general sharpness, clarity, and texture hallucination.
+- **4x-Transformer**: (Dual Aggregation Transformer / DAT) Optimized for realistic photo reconstruction and removing heavy web compression (JPEG/WebP) artifacts.
+- **4x-SPAN**: (Swift Parameter-free Attention Network) High-performance, lightweight model balancing speed and quality.
 
 ---
 
@@ -24,7 +29,7 @@ This project facilitates high-quality photo and texture reconstruction using GPU
 - `test.py`: A diagnostic tool to verify your Python environment and GPU status.
 - `testgpu.py`: A quick benchmark to verify CUDA execution and inference speed.
 - `models/`: Folder to store your `.onnx` model files.
-- `input/`: Place your source images (`.jpg`, `.png`, `.webp`, etc.) here.
+- `input/`: Place your source images or evaluation datasets (`.jpg`, `.png`, `.webp`, etc.) here.
 - `output/`: Folder where upscaled images are saved.
 - `venv/`: Python virtual environment for isolated dependencies.
 
@@ -61,13 +66,6 @@ Ensure you have an NVIDIA GPU for the best experience. The project relies on:
   ```bash
   python compare.py
   ```
-
----
-
-## 🧪 Available Models
-- **4x-UltraSharpV2**: Best for general sharpness and clarity.
-- **4xRealWebPhoto**: Optimized for realistic photo and face reconstruction.
-- **4xSPANkendata**: High-performance, lightweight SPAN model.
 
 ---
 

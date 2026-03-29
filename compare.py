@@ -4,27 +4,26 @@ import numpy as np
 from pathlib import Path
 
 def create_comparison(input_name: str):
-    """Create a side-by-side comparison of the original image and all models."""
     input_path = Path('input') / input_name
     if not input_path.exists():
-        print(f"✗ Input image not found: {input_path}")
+        print(f"Input image not found: {input_path}")
         return
         
     img_orig = cv2.imread(str(input_path))
     if img_orig is None:
-        print("✗ Failed to load input image")
+        print("Failed to load input image")
         return
         
     outputs = []
     labels = []
     
-    # Find all outputs for this image
+    # Find all outputs
     output_files = sorted(Path('output').glob(f'*_{input_name}'))
     if not output_files:
         print(f"✗ No output images found for {input_name}")
         return
 
-    # Upscale the original to match the 4x resolution using Nearest Neighbor
+    # Upscale the original
     first_out = cv2.imread(str(output_files[0]))
     h_out, w_out = first_out.shape[:2]
     
@@ -41,7 +40,7 @@ def create_comparison(input_name: str):
             outputs.append(img_out)
             labels.append(model_name)
             
-    # Add text labels to each image
+    # Add text labels
     labeled_outputs = []
     for img, label in zip(outputs, labels):
         img_copy = img.copy()
@@ -54,18 +53,18 @@ def create_comparison(input_name: str):
     comparison = np.hstack(labeled_outputs)
     
     # Scale down the combined image if it's too large for standard viewing
-    MAX_WIDTH = 3840 # typical 4k width
+    MAX_WIDTH = 3840 
     if comparison.shape[1] > MAX_WIDTH:
         scale = MAX_WIDTH / comparison.shape[1]
         comparison = cv2.resize(comparison, (MAX_WIDTH, int(comparison.shape[0] * scale)))
         
     save_path = f'comparison_{input_path.stem}.jpg'
     cv2.imwrite(save_path, comparison)
-    print(f"\n✓ Comparison generated successfully!")
+    print(f"\n Comparison generated!")
     print(f"  Includes: {', '.join(labels)}")
     print(f"  Saved as: {save_path}")
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     if len(sys.argv) >= 2:
         create_comparison(sys.argv[1])
     else:

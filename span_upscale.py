@@ -1,15 +1,9 @@
 import os
 import cv2
 import numpy as np
-
-# Import torch before onnxruntime to fix CUDA DLL loading issues on Windows
-# PyTorch adds its bundled CUDA libraries to the DLL search path
-try:
-    import torch
-except ImportError:
-    pass
-
+import torch
 import onnxruntime as ort
+ort.set_default_logger_severity(3) # Hide ScatterND warning
 from pathlib import Path
 import time
 from tqdm import tqdm
@@ -31,7 +25,6 @@ class SPANUpscaler:
         self.active_provider = self.session.get_providers()[0]
     
     def upscale_image(self, input_path: str, output_path: str, tile_size: int = 256, show_progress: bool = False):
-        """Upscale a single image, using tiling if necessary."""
         img = cv2.imread(input_path, cv2.IMREAD_COLOR)
         if img is None:
             return False
@@ -64,7 +57,7 @@ class SPANUpscaler:
         return output
     
     def _upscale_tiled(self, img_float: np.ndarray, tile_size: int) -> np.ndarray:
-        """Upscale image with tiling for memory efficiency."""
+        """Upscale image with tiling"""
         h, w, _ = img_float.shape
         scale = self.scale
         tile_pad = 10
@@ -100,7 +93,6 @@ class SPANUpscaler:
 
 
 def clear_output_folder(output_folder: str):
-    """Clear all contents of the output folder."""
     output_path = Path(output_folder)
     if output_path.exists():
         for file in output_path.iterdir():
@@ -114,37 +106,26 @@ def main():
     INPUT_FOLDER = 'input'
     OUTPUT_FOLDER = 'output'
     TILE_SIZE = 256  # Adjust for VRAM (128-512)
-    
-    # Discover models
     model_files = sorted(list(Path(MODELS_DIR).glob('*.onnx')))
     
     if not model_files:
-        print(f"✗ No models found in: {MODELS_DIR}")
-        print("Download models to the 'models' folder first.")
+        print(f"No models found in: {MODELS_DIR}")
         exit(1)
     
-    # Discover input images
     os.makedirs(INPUT_FOLDER, exist_ok=True)
     formats = ('.png', '.jpg', '.jpeg', '.webp', '.bmp')
     input_files = [f for f in Path(INPUT_FOLDER).iterdir() if f.suffix.lower() in formats]
     
     if not input_files:
-        print(f"\n⚠️ No images in {INPUT_FOLDER}/")
-        print("Place images in 'input' folder and run again")
+        print(f"No images in {INPUT_FOLDER}/")
         exit(0)
     
-    # Clear output folder
     clear_output_folder(OUTPUT_FOLDER)
     
-    # Print header
-    print("\n" + "=" * 70)
-    print("  IMG_PROJECT - AI IMAGE UPSCALING")
-    print("=" * 70)
-    print(f"  Models: {len(model_files)}")
-    print(f"  Images: {len(input_files)}")
-    print(f"  Total Jobs: {len(model_files) * len(input_files)}")
-    print(f"  Tile Size: {TILE_SIZE}px")
-    print("=" * 70 + "\n")
+    print(f"Models: {len(model_files)}")
+    print(f"Images: {len(input_files)}")
+    print(f"Total Jobs: {len(model_files) * len(input_files)}")
+    print(f"Tile Size: {TILE_SIZE}px")
     
     # Track statistics
     total_jobs = len(model_files) * len(input_files)
@@ -155,15 +136,13 @@ def main():
     # Process ALL models
     for model_idx, model_path in enumerate(tqdm(model_files, desc="Models", position=0, leave=False), 1):
         model_name = model_path.stem
-        print(f"\n{'=' * 70}")
-        print(f"  MODEL [{model_idx}/{len(model_files)}]: {model_name}")
-        print(f"{'=' * 70}")
+        print(f"MODEL [{model_idx}/{len(model_files)}]: {model_name}")
         
         try:
             upscaler = SPANUpscaler(str(model_path), scale=4)
-            print(f"  Provider: {upscaler.active_provider}")
+            print(f"Provider: {upscaler.active_provider}")
         except Exception as e:
-            print(f"  ✗ Failed to load model: {e}")
+            print(f"Failed to load model: {e}")
             failed_jobs += len(input_files)
             continue
         
@@ -202,8 +181,8 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n⚠️ Operation cancelled by user.")
+        print("\n\nOperation cancelled by user.")
         exit(0)
     except Exception as e:
-        print(f"\n✗ Fatal error: {e}")
+        print(f"\nFatal error: {e}")
         exit(1)
