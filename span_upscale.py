@@ -7,16 +7,15 @@ ort.set_default_logger_severity(3) # Hide ScatterND warning
 from pathlib import Path
 import time
 from tqdm import tqdm
-import shutil
 
 class SPANUpscaler:
     def __init__(self, model_path: str, scale: int = 4):
-        """Initialize the SPAN upscaler with GPU priority."""
         self.model_path = model_path
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model not found: {model_path}")
         
-        providers = ['CUDAExecutionProvider', 'CPUExecutionProvider']
+        providers = ['CUDAExecutionProvider']
+        ort.set_default_logger_severity(3) # Hide verbose graph optimizations
         self.session = ort.InferenceSession(model_path, providers=providers)
         
         self.scale = scale
@@ -92,20 +91,11 @@ class SPANUpscaler:
         return output
 
 
-def clear_output_folder(output_folder: str):
-    output_path = Path(output_folder)
-    if output_path.exists():
-        for file in output_path.iterdir():
-            if file.is_file():
-                file.unlink()
-    output_path.mkdir(parents=True, exist_ok=True)
-
-
 def main():
     MODELS_DIR = 'models'
     INPUT_FOLDER = 'input'
     OUTPUT_FOLDER = 'output'
-    TILE_SIZE = 256  # Adjust for VRAM (128-512)
+    TILE_SIZE = 256  # Reverted back to 256 to prevent CUDA OOM bad allocation on heavy models
     model_files = sorted(list(Path(MODELS_DIR).glob('*.onnx')))
     
     if not model_files:
@@ -120,7 +110,7 @@ def main():
         print(f"No images in {INPUT_FOLDER}/")
         exit(0)
     
-    clear_output_folder(OUTPUT_FOLDER)
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
     
     print(f"Models: {len(model_files)}")
     print(f"Images: {len(input_files)}")
@@ -139,8 +129,9 @@ def main():
         print(f"MODEL [{model_idx}/{len(model_files)}]: {model_name}")
         
         try:
+            model_tile_size = 128 if "Transformer" in model_name else TILE_SIZE
             upscaler = SPANUpscaler(str(model_path), scale=4)
-            print(f"Provider: {upscaler.active_provider}")
+            print(f"Provider: {upscaler.active_provider} | Tile Size: {model_tile_size}")
         except Exception as e:
             print(f"Failed to load model: {e}")
             failed_jobs += len(input_files)
@@ -150,17 +141,23 @@ def main():
         for img_idx, img_file in enumerate(tqdm(input_files, desc="Images", position=1, leave=False), 1):
             output_file = Path(OUTPUT_FOLDER) / f"{model_name}_{img_file.name}"
             
+            if output_file.exists():
+                print(f"  - [{img_idx}/{len(input_files)}] Skipping {img_file.name} (already exists)")
+                completed_jobs += 1
+                continue
+                
             try:
-                success = upscaler.upscale_image(str(img_file), str(output_file), TILE_SIZE)
+                print(f"  -> Processing: {img_file.name}...", end="", flush=True)
+                success = upscaler.upscale_image(str(img_file), str(output_file), model_tile_size)
                 if success:
                     completed_jobs += 1
-                    print(f"  ✓ [{img_idx}/{len(input_files)}] {img_file.name}")
+                    print(f"  [OK] [{img_idx}/{len(input_files)}] {img_file.name}")
                 else:
                     failed_jobs += 1
-                    print(f"  ✗ [{img_idx}/{len(input_files)}] {img_file.name} (processing failed)")
+                    print(f"  [FAIL] [{img_idx}/{len(input_files)}] {img_file.name} (processing failed)")
             except Exception as e:
                 failed_jobs += 1
-                print(f"  ✗ [{img_idx}/{len(input_files)}] {img_file.name} ({str(e)[:50]})")
+                print(f"  [FAIL] [{img_idx}/{len(input_files)}] {img_file.name} ({str(e)[:50]})")
     
     # Print summary
     elapsed = time.time() - start_time
@@ -168,8 +165,8 @@ def main():
     print("  UPSCALING COMPLETE")
     print("=" * 70)
     print(f"  Total Jobs: {total_jobs}")
-    print(f"  Successful: {completed_jobs} ✓")
-    print(f"  Failed: {failed_jobs} ✗")
+    print(f"  Successful: {completed_jobs}")
+    print(f"  Failed: {failed_jobs}")
     print(f"  Total Time: {elapsed:.2f}s")
     if completed_jobs > 0:
         print(f"  Avg Time/Image: {elapsed/completed_jobs:.2f}s")

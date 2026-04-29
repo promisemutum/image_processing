@@ -20,10 +20,10 @@ def check_packages():
         try:
             mod = __import__(pkg)
             version = getattr(mod, '__version__', 'Unknown')
-            print(f"✓ {name}: {version}")
+            print(f"[OK] {name}: {version}")
             results[pkg] = True
         except ImportError:
-            print(f"✗ {name}: NOT INSTALLED")
+            print(f"[X] {name}: NOT INSTALLED")
             results[pkg] = False
     return results
 
@@ -32,43 +32,43 @@ def check_cuda():
         import torch
         cuda_available = torch.cuda.is_available()
         if cuda_available:
-            print(f"✓ CUDA: Available")
+            print(f"[OK] CUDA: Available")
             print(f"  GPU Count: {torch.cuda.device_count()}")
             print(f"  GPU Name: {torch.cuda.get_device_name(0)}")
             print(f"  CUDA Version: {torch.version.cuda}")
         else:
-            print(f"⚠ CUDA: Not Available (CPU mode only)")
+            print(f"[!] CUDA: Not Available (CPU mode only)")
         return cuda_available
     except:
-        print(f"✗ CUDA: Cannot verify (PyTorch not installed)")
+        print(f"[X] CUDA: Cannot verify (PyTorch not installed)")
         return False
 
 def check_onnx_providers():
     try:
         import onnxruntime as ort
         providers = ort.get_available_providers()
-        print(f"✓ ONNX Providers: {providers}")
+        print(f"[OK] ONNX Providers: {providers}")
         
         has_gpu = 'CUDAExecutionProvider' in providers or 'TensorrtExecutionProvider' in providers
         if has_gpu:
-            print(f"  ✓ GPU Acceleration: ENABLED")
+            print(f"  [OK] GPU Acceleration: ENABLED")
         else:
-            print(f"  ⚠ GPU Acceleration: DISABLED (CPU only)")
+            print(f"  [!] GPU Acceleration: DISABLED (CPU only)")
         return has_gpu
     except:
-        print(f"✗ ONNX Runtime: Cannot verify")
+        print(f"[X] ONNX Runtime: Cannot verify")
         return False
 
 def check_models():
     from pathlib import Path
     models = list(Path('models').glob('*.onnx'))
     if models:
-        print(f"✓ Models Found: {len(models)}")
+        print(f"[OK] Models Found: {len(models)}")
         for m in models:
             size_mb = m.stat().st_size / 1024 / 1024
             print(f"  - {m.name} ({size_mb:.1f} MB)")
     else:
-        print(f"✗ Models: None found in models/")
+        print(f"[X] Models: None found in models/")
     return len(models) > 0
 
 def main():
@@ -88,9 +88,9 @@ def main():
     print()
     print("=" * 60)
     if all(checks.values()):
-        print("  ✓ ALL CHECKS PASSED - Ready to upscale!")
+        print("  [OK] ALL CHECKS PASSED - Ready to upscale!")
     else:
-        print("  ⚠ SOME CHECKS FAILED - Review above")
+        print("  [!] SOME CHECKS FAILED - Review above")
         if not checks['Packages']:
             print("\n  Install: pip install -r requirements.txt")
         if not checks['Models']:

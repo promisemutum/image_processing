@@ -1,22 +1,0 @@
-C:\Users\Asus\Documents\dev\img_project\venv\lib\site-packages\torchvision\models\_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
-  warnings.warn(
-C:\Users\Asus\Documents\dev\img_project\venv\lib\site-packages\torchvision\models\_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=AlexNet_Weights.IMAGENET1K_V1`. You can also use `weights=AlexNet_Weights.DEFAULT` to get the most up-to-date weights.
-  warnings.warn(msg)
-Loading LPIPS metric model (AlexNet)...
-Setting up [LPIPS] perceptual loss: trunk [alex], v[0.1], spatial [off]
-Loading model from: C:\Users\Asus\Documents\dev\img_project\venv\lib\site-packages\lpips\weights\v0.1\alex.pth
-
-Found 4 Ground Truth images to evaluate against.
-Evaluating Images:   0%|          | 0/4 [00:00<?, ?it/s]Evaluating Images:  25%|##5       | 1/4 [00:00<00:00,  3.23it/s]Evaluating Images:  50%|#####     | 2/4 [00:00<00:00,  2.39it/s]Evaluating Images:  75%|#######5  | 3/4 [00:01<00:00,  1.76it/s]Evaluating Images: 100%|##########| 4/4 [00:01<00:00,  1.94it/s]Evaluating Images: 100%|##########| 4/4 [00:01<00:00,  2.02it/s]
-
-============================================================
-  EVALUATION RESULTS OVER 4 IMAGES
-============================================================
-Traceback (most recent call last):
-  File "C:\Users\Asus\Documents\dev\img_project\evaluate.py", line 112, in <module>
-    main()
-  File "C:\Users\Asus\Documents\dev\img_project\evaluate.py", line 94, in main
-    print(f"{'Model':<18} | {'PSNR (\u2191)':<10} | {'SSIM (\u2191)':<10} | {'LPIPS (\u2193)':<10}")
-  File "C:\Users\Asus\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
-    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
-UnicodeEncodeError: 'charmap' codec can't encode character '\u2191' in position 27: character maps to <undefined>

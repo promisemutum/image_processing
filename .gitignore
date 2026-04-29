@@ -18,3 +18,4 @@ models/*
 # Project specific
 comparison.jpg
 *.onnx
+ground_truth/

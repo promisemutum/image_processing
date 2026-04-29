@@ -19,7 +19,7 @@ def prepare_dataset():
         print(f"Please place some high-resolution photos in the '{GT_DIR}' folder first.")
         return
 
-    print(f"Found {len(gt_files)} images in '{GT_DIR}'. Creating {SCALE}x downscaled inputs...")
+    print(f"Found {len(gt_files)} images in '{GT_DIR}'. Resizing to maintain aspect ratio with a max dimension...")
     
     # Clear input directory
     for f in Path(INPUT_DIR).iterdir():
@@ -33,11 +33,19 @@ def prepare_dataset():
             
         h, w = img.shape[:2]
         
-        # Calculate new dimensions
-        new_w, new_h = w // SCALE, h // SCALE
+        # Calculate new dimensions preserving aspect ratio
+        max_dim = max(h, w)
+        if max_dim > 768:
+            scale = 768 / max_dim
+            new_w, new_h = int(w * scale), int(h * scale)
+        else:
+            new_w, new_h = w, h
         
         # Downscale using High-Quality Bicubic Interpolation
-        lr_img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+        if (new_w, new_h) != (w, h):
+            lr_img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+        else:
+            lr_img = img
         
         # Save to input folder
         out_path = Path(INPUT_DIR) / gt_path.name
